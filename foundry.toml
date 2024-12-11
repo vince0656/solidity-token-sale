@@ -1,10 +1,11 @@
 [profile.default]
 src = 'contracts'
 out = 'out'
-test = 'test'
+test = 'tests'
 libs = ['lib']
 
 remappings = [
   '@contracts=contracts',
-  '@test=test'
+  '@test=test',
+  '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/'
 ]
