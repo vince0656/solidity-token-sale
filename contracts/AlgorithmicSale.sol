@@ -10,16 +10,21 @@ contract AlgorithmicSale is Initializable {
     /// @notice Address of the token required for payment
     address public currency;
 
+    /// @notice Address of the model that regulates the sale price according to demand
+    address public priceModel;
+
     constructor() {
         _disableInitializers();
     }
 
     function initialize(
         address token_,
-        address currency_
+        address currency_,
+        address priceModel_
     ) external onlyInitializing {
         token = token_;
         currency = currency_;
+        priceModel = priceModel_;
     }
 
 }
