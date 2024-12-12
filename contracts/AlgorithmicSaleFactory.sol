@@ -2,6 +2,7 @@ pragma solidity 0.8.28;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {AlgorithmicSale} from "@contracts/AlgorithmicSale.sol";
+import {Errors} from "@contracts/Errors.sol";
 
 contract AlgorithmicSaleFactory {
     // Use EIP-1167 for cheap CREATE 2 deployments
@@ -23,6 +24,8 @@ contract AlgorithmicSaleFactory {
         address saleContractImplementation_,
         address priceModel_
     ) {
+        require(saleContractImplementation_ != address(0), Errors.InvalidValue());
+        require(priceModel_ != address(0), Errors.InvalidValue());
         saleContractImplementation = saleContractImplementation_;
         priceModel = priceModel_;
     }
