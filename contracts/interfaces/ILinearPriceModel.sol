@@ -1,6 +1,11 @@
 pragma solidity 0.8.28;
 
 interface ILinearPriceModel {
+    /// @notice Calculate the price of an asset based on tokens sold and the params of the linear equation
+    /// @param totalTokensBeingSold Number of tokens that are being sold
+    /// @param remainingTokensAvailableForPurchase Total number of tokens available to buy
+    /// @param startingPrice The initial price of the asset
+    /// @return currentPrice The calculated price based on the model variables and the inputs
     function getCurrentPrice(
         uint256 totalTokensBeingSold, 
         uint256 remainingTokensAvailableForPurchase, 

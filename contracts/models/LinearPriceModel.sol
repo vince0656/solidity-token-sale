@@ -35,6 +35,7 @@ contract LinearPriceModel is ILinearPriceModel {
         breakpointInRAY = breakpointInRAY_;
     }
 
+    /// @inheritdoc ILinearPriceModel
     function getCurrentPrice(uint256 totalTokensBeingSold, uint256 remainingTokensAvailableForPurchase, uint256 startingPrice) external override view returns (uint256 currentPrice) {
         // Perform validation
         require(totalTokensBeingSold > 0, Errors.InvalidValue());
