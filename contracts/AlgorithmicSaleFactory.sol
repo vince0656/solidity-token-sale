@@ -2,7 +2,7 @@ pragma solidity 0.8.28;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {AlgorithmicSale} from "@contracts/AlgorithmicSale.sol";
-import {Errors} from "@contracts/Errors.sol";
+import {Errors} from "@contracts/errors/Errors.sol";
 
 contract AlgorithmicSaleFactory {
     // Use EIP-1167 for cheap CREATE 2 deployments
@@ -38,6 +38,7 @@ contract AlgorithmicSaleFactory {
         address token,
         address currency
     ) external returns (address sale) {
+        require(token != address(0), Errors.InvalidValue());
         sale = saleContractImplementation.cloneDeterministic(getDeploymentSaltFromToken(token));
 
         AlgorithmicSale(sale).initialize(token, currency, priceModel);
@@ -49,6 +50,7 @@ contract AlgorithmicSaleFactory {
     /// @dev The beauty of this is that no storage mapping is required making deployment cheaper
     /// @param token The address of the token being sold
     function getTokenSaleAddress(address token) external view returns (address) {
+        require(token != address(0), Errors.InvalidValue());
         return saleContractImplementation.predictDeterministicAddress(
             getDeploymentSaltFromToken(token),
             address(this)
@@ -58,6 +60,7 @@ contract AlgorithmicSaleFactory {
     /// @notice Generate the CREATE2 deployment salt from the address of the token being sold
     /// @param token The address of the token being sold
     function getDeploymentSaltFromToken(address token) public pure returns (bytes32) {
+        require(token != address(0), Errors.InvalidValue());
         return keccak256(abi.encode(token));
     }
 }
