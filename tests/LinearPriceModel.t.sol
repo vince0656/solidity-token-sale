@@ -22,4 +22,10 @@ contract LinearPriceModelContractTests is Test {
         assertEq(model.getCurrentPrice(1_000, 0, uint256(price)), uint256(price) * 3);
     }
 
+    /// @dev Fuzzed test. We know when nothing is sold, the current price will equal starting prive
+    function testGetCurrentPriceWhenNothingSold(uint256 price) public view {
+        vm.assume(price > 0);
+        assertEq(model.getCurrentPrice(1_000, 1_000, price), price);
+    }
+
 }

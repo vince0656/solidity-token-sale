@@ -33,15 +33,26 @@ contract AlgorithmicSaleFactory {
     /// @notice Deploy a token sale contract using CREATE2 and configure it as per the user's arguments
     /// @param token The address of the token being sold
     /// @param currency The address of the token accepted as payment for the sale
+    /// @param totalLengthOfSale Total duration of the sale
     /// @return sale The address of the deployed sale contract
     function createTokenSale(
         address token,
-        address currency
+        address currency,
+        uint256 startingPrice,
+        uint256 totalNumberOfTokensToSell,
+        uint256 totalLengthOfSale
     ) external returns (address sale) {
-        require(token != address(0), Errors.InvalidValue());
         sale = saleContractImplementation.cloneDeterministic(getDeploymentSaltFromToken(token));
 
-        AlgorithmicSale(sale).initialize(token, currency, priceModel);
+        AlgorithmicSale(sale).initialize(
+            token,
+            currency,
+            priceModel,
+            startingPrice,
+            totalNumberOfTokensToSell,
+            msg.sender,
+            totalLengthOfSale
+        );
 
         emit TokenSaleCreated(token, sale);
     }

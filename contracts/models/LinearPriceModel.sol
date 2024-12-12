@@ -2,9 +2,9 @@ pragma solidity 0.8.28;
 
 import {Errors} from "@contracts/errors/Errors.sol";
 import {LinearPriceModelErrors} from "@contracts/errors/LinearPriceModelErrors.sol";
-import {ILinearPriceModel} from "@contracts/interfaces/ILinearPriceModel.sol";
+import {IPriceModel} from "@contracts/interfaces/IPriceModel.sol";
 
-contract LinearPriceModel is ILinearPriceModel { 
+contract LinearPriceModel is IPriceModel { 
 
     /// @notice Scaling value as used in Aave calculations
     uint256 public constant RAY = 1e27;
@@ -35,7 +35,7 @@ contract LinearPriceModel is ILinearPriceModel {
         breakpointInRAY = breakpointInRAY_;
     }
 
-    /// @inheritdoc ILinearPriceModel
+    /// @inheritdoc IPriceModel
     function getCurrentPrice(uint256 totalTokensBeingSold, uint256 remainingTokensAvailableForPurchase, uint256 startingPrice) external override view returns (uint256 currentPrice) {
         // Perform validation
         require(totalTokensBeingSold > 0, Errors.InvalidValue());
