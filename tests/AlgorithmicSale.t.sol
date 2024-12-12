@@ -1,8 +1,8 @@
-pragma solidity ^0.8.23;
+pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
 
-contract SaleContractTests is Test {
+contract AlgorithmicSaleContractTests is Test {
     
     address user;
     
