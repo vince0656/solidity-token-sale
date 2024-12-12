@@ -4,4 +4,5 @@ library SaleErrors {
     error SaleTooShort();
     error ExceedsMaxAmount();
     error SaleFinished();
+    error SaleNotFinished();
 }
