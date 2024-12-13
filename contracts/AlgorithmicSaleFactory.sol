@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {AlgorithmicSale} from "@contracts/AlgorithmicSale.sol";
 import {Errors} from "@contracts/errors/Errors.sol";
 
+/// @notice Smart contract to allow any wallet to deploy a sale for a new token that they create
+/// @author Vincent Almeida @ DEL Blockchain Solutions
 contract AlgorithmicSaleFactory {
     // Use EIP-1167 for cheap CREATE 2 deployments
     using Clones for address;
@@ -43,7 +46,6 @@ contract AlgorithmicSaleFactory {
         uint256 totalLengthOfSale
     ) external returns (address sale) {
         sale = saleContractImplementation.cloneDeterministic(getDeploymentSaltFromToken(token));
-
         AlgorithmicSale(sale).initialize(
             token,
             currency,

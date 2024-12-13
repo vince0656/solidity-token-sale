@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 import {Errors} from "@contracts/errors/Errors.sol";
 import {LinearPriceModelErrors} from "@contracts/errors/LinearPriceModelErrors.sol";
 import {IPriceModel} from "@contracts/interfaces/IPriceModel.sol";
 
+/// @notice Based on the Aave default interest rate model, it has been adapted to focus only on pricing an asset based on tokens sold
+/// @author Vincent Almeida @ DEL Blockchain Solutions
 contract LinearPriceModel is IPriceModel { 
 
     /// @notice Scaling value as used in Aave calculations

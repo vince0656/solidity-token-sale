@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+/// @author Vincent Almeida @ DEL Blockchain Solutions
 interface IPriceModel {
     /// @notice Calculate the price of an asset based on tokens sold and the params of the models equation
     /// @param totalTokensBeingSold Number of tokens that are being sold
