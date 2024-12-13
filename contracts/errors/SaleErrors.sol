@@ -5,4 +5,6 @@ library SaleErrors {
     error ExceedsMaxAmount();
     error SaleFinished();
     error SaleNotFinished();
+    error InvalidSellAmount();
+    error InvalidTotalNumberOfTokensBeingSold();
 }
