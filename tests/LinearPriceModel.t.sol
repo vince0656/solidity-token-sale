@@ -10,10 +10,10 @@ contract LinearPriceModelContractTests is Test {
 
     function setUp() public {
         model = new LinearPriceModel(
-            1e25, // 1%
-            5e26, // 50%
-            2e27, // 200%
-            5e26  // 50%
+            1e25, // 1% base increase
+            5e26, // 50% price appreciation as a target
+            2e27, // 200% max appreciation
+            5e26  // 50% sold as the breakpoint for escalating the price increase
         );
     }
 
@@ -23,7 +23,7 @@ contract LinearPriceModelContractTests is Test {
         assertEq(model.getCurrentPrice(1_000, 0, uint256(price)), uint256(price) * 3);
     }
 
-    /// @dev Fuzzed test. We know when nothing is sold, the current price will equal starting prive
+    /// @dev Fuzzed test. We know when nothing is sold, the current price will equal starting price
     function testGetCurrentPriceWhenNothingSold(uint256 price) public view {
         vm.assume(price > 0);
         assertEq(model.getCurrentPrice(1_000, 1_000, price), price);

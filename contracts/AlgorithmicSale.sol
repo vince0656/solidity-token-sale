@@ -143,16 +143,19 @@ contract AlgorithmicSale is Initializable {
     /// @dev Only permitted when the sale has not ended
     /// @param amount of whole tokens being sold
     function sell(uint256 amount) external whenSaleActive {
-        // Ensure user is not selling more than the sale offered
+        // Ensure amount is non zero and that all of the tokens are not sold out as it would be annoying for the seller otherwise
         require(amount > 0, Errors.InvalidValue());
+        require(numberOfTokensSold < totalNumberOfTokensBeingSold, SaleErrors.SoldOut());
+
+        // Ensure user is not selling more than the sale offered
         uint256 amountOfTokensBeingSold = parseWholeTokenAmount(amount);
         require(amountOfTokensBeingSold <= numberOfTokensSold, SaleErrors.InvalidSellAmount());
 
-        // Record the number of tokens being sold
-        numberOfTokensSold -= amountOfTokensBeingSold;
-
         // Get the new price of the asset based on the new sold number of tokens which may yield a profit or loss depending on purchase price
         uint256 currentPrice = getCurrentPrice();
+
+        // Record the number of tokens being sold
+        numberOfTokensSold -= amountOfTokensBeingSold;
 
         // Request the tokens from the user and refund the payment based on the new asset price
         token.safeTransferFrom(msg.sender, address(this), amountOfTokensBeingSold);

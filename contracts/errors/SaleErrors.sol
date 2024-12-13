@@ -9,4 +9,5 @@ library SaleErrors {
     error SaleNotFinished();
     error InvalidSellAmount();
     error InvalidTotalNumberOfTokensBeingSold();
+    error SoldOut();
 }

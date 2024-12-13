@@ -7,6 +7,7 @@ import {ERC20Token} from "@test/mocks/ERC20Token.sol";
 import {AlgorithmicSale} from "@contracts/AlgorithmicSale.sol";
 import {AlgorithmicSaleFactory} from "@contracts/AlgorithmicSaleFactory.sol";
 import {LinearPriceModel} from "@contracts/models/LinearPriceModel.sol";
+import {SaleErrors} from "@contracts/errors/SaleErrors.sol";
 
 contract AlgorithmicSaleContractTests is Test {
 
@@ -18,7 +19,7 @@ contract AlgorithmicSaleContractTests is Test {
     AlgorithmicSale sale;
     address userOne = vm.addr(1);
     address userTwo = vm.addr(2);
-    uint256 maxTokenSaleAmount = 1_000_000 ether;
+    uint256 maxTokenSaleAmount = 5_000_000 ether;
 
     function setUp() public {
         // Deploy the token sale factory
@@ -46,7 +47,7 @@ contract AlgorithmicSaleContractTests is Test {
         assertEq(saleFactory.priceModel(), address(priceModel));
     }
 
-    function testCreateSale(uint256 startingPrice, uint256 length) public {
+    function testCreateSale(uint256 startingPrice, uint128 length) public {
         vm.assume(length >= 1 hours);
         vm.assume(startingPrice >= 1 wei);
         uint256 totalNumOfTokensToSell = 50_000 ether;
@@ -58,10 +59,10 @@ contract AlgorithmicSaleContractTests is Test {
         assertEq(sale.totalLengthOfSaleInSeconds(), length);
     }
 
-    function testBuyTokens() public {
+    function testBuyTokens(uint128 length) public {
         // Create the sale
+        vm.assume(length >= 1 hours);
         uint256 startingPrice = 0.1 ether;
-        uint256 length = 12 hours;
         uint256 totalNumOfTokensToSell = 500_000 ether;
         deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
 
@@ -83,6 +84,76 @@ contract AlgorithmicSaleContractTests is Test {
         uint256 previewPriceAfterFirstSale = sale.previewAssetPriceForPurchase(numberOfTokensBeingPurchased);
         console.log("Preview price after sale", previewPriceAfterFirstSale);
         assertGt(previewPriceAfterFirstSale, previewPrice);
+    }
+
+    function testUserBuysAllTheTokensAndPaysTrippleBasePrice(uint256 startingPrice, uint128 length) public {
+        // Create the sale
+        vm.assume(startingPrice > 0 && startingPrice <= 1.5 ether); // Due to allowances we restrict
+        vm.assume(length >= 1 hours);
+        uint256 totalNumOfTokensToSell = 500_000 ether;
+        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
+
+        // Buy the full supply as a wave
+        uint256 userTwoTokenBalanceBefore = token.balanceOf(userTwo);
+        vm.startPrank(userTwo);
+        currency.approve(address(sale), startingPrice * 3 * (totalNumOfTokensToSell / 1 ether)); // Based on model params we know there is a 200% markup
+        sale.buy(totalNumOfTokensToSell / 1 ether);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(userTwo) - userTwoTokenBalanceBefore, totalNumOfTokensToSell);
+
+        // Cannot sell the tokens back once they are sold out
+        vm.expectRevert(SaleErrors.SoldOut.selector);
+        sale.sell(totalNumOfTokensToSell / 1 ether);
+    }
+
+    function testUserThatBuysCanSellBackToTheContractReducingThePriceAfterwards(uint128 length) public {
+        // Deploy the sale
+        vm.assume(length >= 1 hours);
+        uint256 startingPrice = 1 ether;
+        uint256 totalNumOfTokensToSell = 500_000 ether;
+        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
+
+        // Buy half of the tokens
+        uint256 buyAmount = (totalNumOfTokensToSell / 2) / 1 ether;
+        uint256 cost = (startingPrice + 0.5 ether) * buyAmount;
+        vm.startPrank(userTwo);
+        currency.approve(address(sale), cost); // Based on model params we know half sold means 50% increase
+        sale.buy(buyAmount);
+        vm.stopPrank();
+
+        // Sell back the tokens
+        uint256 userTwoCurrencyBalanceBeforeSale = currency.balanceOf(userTwo);
+        vm.startPrank(userTwo);
+        token.approve(address(sale), buyAmount * 1 ether);
+        sale.sell(buyAmount);
+        vm.stopPrank();
+
+        assertEq(currency.balanceOf(userTwo) - userTwoCurrencyBalanceBeforeSale, cost);
+    }
+
+    function testWithdraw(uint128 length) public {
+        // Deploy the sale
+        vm.assume(length >= 1 hours);
+        uint256 startingPrice = 1 ether;
+        uint256 totalNumOfTokensToSell = 500_000 ether;
+        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
+
+        // Buy half of the tokens
+        uint256 buyAmount = (totalNumOfTokensToSell / 2) / 1 ether;
+        uint256 cost = (startingPrice + 0.5 ether) * buyAmount;
+        vm.startPrank(userTwo);
+        currency.approve(address(sale), cost); // Based on model params we know half sold means 50% increase
+        sale.buy(buyAmount);
+        vm.stopPrank();
+
+        // Fast forward to the end
+        vm.warp(block.timestamp + length + 5 minutes);
+
+        // Withdraw assets from the contract
+        vm.prank(userOne);
+        sale.withdraw();
+        vm.stopPrank();
     }
 
     function deploySale(
