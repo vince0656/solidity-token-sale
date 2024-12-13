@@ -6,6 +6,6 @@ libs = ['lib']
 
 remappings = [
   '@contracts=contracts',
-  '@test=test',
+  '@test=tests',
   '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/'
 ]

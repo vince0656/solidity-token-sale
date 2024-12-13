@@ -10,3 +10,14 @@ Basing the implementation of the linear pricing model on the Aave model has the 
 - Has an interesting step up function which uses a steeper gradient when demand exceeds defined parameters, thus incentivizing earlier sales
 - Will decrease the price if buy demand drops i.e. when there are sales due to buyers changing their minds and selling back to the market. 
 - By the end of the token sale, a final price is determined through the pricing model thus enabling early price discovery of a token using this mechanism without a DEX which normally requires two-sided liquidity
+
+# Usage
+## Build
+```
+forge build --sizes
+```
+
+## Test
+```
+forge test
+```

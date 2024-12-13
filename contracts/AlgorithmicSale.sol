@@ -84,7 +84,7 @@ contract AlgorithmicSale is Initializable {
         uint256 totalNumberOfTokensBeingSold_,
         address creator_,
         uint256 totalLengthOfSaleInSeconds_
-    ) external onlyInitializing {
+    ) external initializer {
         // Validation (Checks)
         require(token_ != address(0), Errors.InvalidValue());
         require(currency_ != address(0), Errors.InvalidValue());
@@ -106,8 +106,8 @@ contract AlgorithmicSale is Initializable {
         startTimestamp = block.timestamp;   // Start the sale immediately
 
         // Check that the number of tokens being sold corresponds to a whole number and not a fraction by dividing to check for precision loss
-        uint256 wholeNumberOfTokensBeingSold = totalNumberOfTokensBeingSold_ / tokenDecimals;
-        require(wholeNumberOfTokensBeingSold * tokenDecimals == totalNumberOfTokensBeingSold_, SaleErrors.InvalidTotalNumberOfTokensBeingSold());
+        uint256 wholeNumberOfTokensBeingSold = formatTokenAmount(totalNumberOfTokensBeingSold_);
+        require(parseWholeTokenAmount(wholeNumberOfTokensBeingSold) == totalNumberOfTokensBeingSold_, SaleErrors.InvalidTotalNumberOfTokensBeingSold());
 
         // Interaction
         token.safeTransferFrom(creator_, address(this), totalNumberOfTokensBeingSold);
@@ -115,12 +115,12 @@ contract AlgorithmicSale is Initializable {
 
     /// @notice Purchase tokens
     /// @dev Only permitted when the sale has not ended
-    /// @param amount of whole tokens being purchased
+    /// @param amount of whole tokens being purchased. Specifying whole amounts avoids loss of precision for calculating payment
     function buy(uint256 amount) external whenSaleActive {
         // Ensure user is not buying zero tokens and that they are not buying more than permitted
         require(amount > 0, Errors.InvalidValue());
 
-        uint256 amountOfTokensBeingPurchased = amount * tokenDecimals;
+        uint256 amountOfTokensBeingPurchased = parseWholeTokenAmount(amount);
         require(numberOfTokensSold + amountOfTokensBeingPurchased <= totalNumberOfTokensBeingSold, SaleErrors.ExceedsMaxAmount());
 
         // Record the number of tokens being sold
@@ -145,7 +145,7 @@ contract AlgorithmicSale is Initializable {
     function sell(uint256 amount) external whenSaleActive {
         // Ensure user is not selling more than the sale offered
         require(amount > 0, Errors.InvalidValue());
-        uint256 amountOfTokensBeingSold = amount * tokenDecimals;
+        uint256 amountOfTokensBeingSold = parseWholeTokenAmount(amount);
         require(amountOfTokensBeingSold <= numberOfTokensSold, SaleErrors.InvalidSellAmount());
 
         // Record the number of tokens being sold
@@ -198,4 +198,13 @@ contract AlgorithmicSale is Initializable {
         );
     }
 
+    /// @notice Converter of whole token amounts to the wei equivalent using the token's decimal value
+    function parseWholeTokenAmount(uint256 amount) public view returns (uint256) {
+        return amount * (1 * 10 ** tokenDecimals);
+    }
+
+    /// @notice Converter of a raw amount of tokens to the whole number using the token's decimal value
+    function formatTokenAmount(uint256 amount) public view returns (uint256) {
+        return amount / (1 * 10 ** tokenDecimals);
+    }
 }
