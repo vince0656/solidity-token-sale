@@ -7,6 +7,7 @@ import {Errors} from "@contracts/errors/Errors.sol";
 import {LinearPriceModelErrors} from "@contracts/errors/LinearPriceModelErrors.sol";
 
 /// @dev Testing suite for the linear price model leveraging the fuzzer to get deeper coverage
+/// @author Vincent Almeida @ DEL Blockchain Solutions
 contract LinearPriceModelContractTests is Test {
     
     LinearPriceModel model;

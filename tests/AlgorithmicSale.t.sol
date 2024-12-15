@@ -10,6 +10,7 @@ import {LinearPriceModel} from "@contracts/models/LinearPriceModel.sol";
 import {Errors} from "@contracts/errors/Errors.sol";
 import {SaleErrors} from "@contracts/errors/SaleErrors.sol";
 
+/// @author Vincent Almeida @ DEL Blockchain Solutions
 contract AlgorithmicSaleContractTests is Test {
 
     address saleImplementation;
@@ -57,15 +58,10 @@ contract AlgorithmicSaleContractTests is Test {
             return;
         } 
 
-        if (startingPrice < 1 wei) {
+        if (startingPrice < 1 wei || totalNumOfTokensToSell < 1 wei) {
             deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, Errors.InvalidValue.selector);
             return;
-        } 
-        
-        if (totalNumOfTokensToSell < 1 wei) {
-            deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, Errors.InvalidValue.selector);
-            return;
-        } 
+        }
 
         uint256 wholeNumberOfTokensBeingSold = totalNumOfTokensToSell / 1 ether;
         uint256 parsedWholeNumberOfTokensBeingSold = wholeNumberOfTokensBeingSold * 1 ether;
@@ -82,7 +78,7 @@ contract AlgorithmicSaleContractTests is Test {
         assertEq(sale.totalLengthOfSaleInSeconds(), length);
     }
 
-    function testBuyTokens(uint128 length) public {
+    function testBuyingTokensCausesPriceIncrease(uint128 length) public {
         // Create the sale
         vm.assume(length >= 1 hours);
         uint256 startingPrice = 0.1 ether;
@@ -153,9 +149,12 @@ contract AlgorithmicSaleContractTests is Test {
         vm.stopPrank();
 
         assertEq(currency.balanceOf(userTwo) - userTwoCurrencyBalanceBeforeSale, cost);
+
+        // Price should have dropped
+        assertEq(sale.getCurrentPrice(), startingPrice);
     }
 
-    function testWithdraw(uint128 length) public {
+    function testWithdrawAfterSale(uint128 length) public {
         // Deploy the sale
         vm.assume(length >= 1 hours);
         uint256 startingPrice = 1 ether;
@@ -174,9 +173,13 @@ contract AlgorithmicSaleContractTests is Test {
         vm.warp(block.timestamp + length + 5 minutes);
 
         // Withdraw assets from the contract
-        vm.prank(userOne);
-        sale.withdraw();
-        vm.stopPrank();
+        uint256 totalNumOfTokensBeforeWithdraw = token.balanceOf(userOne);
+        uint256 totalNumOfCurrencyTokensBeforeWithdraw = currency.balanceOf(userOne);
+        sale.withdraw(); // Anyone can call but only the creator will get the relevant assets
+
+        // Check balances that the withdraw succeeded
+        assertEq(token.balanceOf(userOne) - totalNumOfTokensBeforeWithdraw, totalNumOfTokensToSell / 2);
+        assertEq(currency.balanceOf(userOne) - totalNumOfCurrencyTokensBeforeWithdraw, cost);
     }
 
     function deploySale(
