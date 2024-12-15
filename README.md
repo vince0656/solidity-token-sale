@@ -29,3 +29,20 @@ forge build --sizes
 ```
 forge test
 ```
+
+## Running coverage
+```
+forge coverage
+```
+
+will output:
+
+```
+| File                                  | % Lines         | % Statements      | % Branches     | % Funcs        |
+|---------------------------------------|-----------------|-------------------|----------------|----------------|
+| contracts/AlgorithmicSale.sol         | 100.00% (53/53) | 100.00% (66/66)   | 67.65% (23/34) | 90.91% (10/11) |
+| contracts/AlgorithmicSaleFactory.sol  | 100.00% (11/11) | 100.00% (13/13)   | 50.00% (4/8)   | 75.00% (3/4)   |
+| contracts/models/LinearPriceModel.sol | 100.00% (18/18) | 100.00% (21/21)   | 84.62% (11/13) | 100.00% (2/2)  |
+| tests/mocks/ERC20Token.sol            | 100.00% (1/1)   | 100.00% (1/1)     | 100.00% (0/0)  | 100.00% (1/1)  |
+| Total                                 | 100.00% (83/83) | 100.00% (101/101) | 69.09% (38/55) | 88.89% (16/18) |
+```
