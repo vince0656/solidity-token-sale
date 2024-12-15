@@ -46,6 +46,9 @@ function getTokenSaleAddress(address token) external view returns (address);
 ### Example transaction
 https://sepolia.arbiscan.io/tx/0xf02abf3ab8cdf6676d16cc9585401dcf3f5d1e8bc65b6ed0ae674f1ae412be8f
 
+### Example sale contract
+https://sepolia.arbiscan.io/address/0x58bfda7ad01bf257cbf4d6ceafe2f6a7410b9912
+
 ## Buying tokens
 As long as the sale is still active, the user can buy tokens by calling the target function on the sale contract:
 ```solidity
@@ -57,6 +60,9 @@ function buy(uint256 amount) external;
 As specified in the natspec, whole number of tokens are specified without the decimal places i.e. specifying 50 tokens will be equivalent to buying 50 * 10 ^ DECIMALS number of tokens. 
 
 After buying tokens, the linear price model will adjust the price of the tokens making it more expensive for future participants of the sale.
+
+### Example transaction
+https://sepolia.arbiscan.io/tx/0x08c55acfcacd8b6b1e06ebaba7ed9396cfc41c220585b5d101c674fa3608ddae
 
 ## Selling tokens
 Should a buyer change their mind and want to sell their tokens back to the sale contract (thereby reducing the price), then they can call the target function on the sale contract:
