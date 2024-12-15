@@ -13,6 +13,11 @@ Basing the implementation of the linear pricing model on the Aave model has the 
 
 > note: The linear pricing model is implemented within its own smart contract so as to allow different implementations that match the [`IPriceModel.sol`](./contracts/interfaces/IPriceModel.sol) interface which would be compatible with any algorithmic sale factory. The design space is quite wide open.
 
+# Deployment
+
+The algorithmic sale factory is deployed to the Arbitrum Sepolia test network at:
+https://sepolia.arbiscan.io/address/0x8E9fB03b82f79f67ea5cE93e673FBD23d617ab83
+
 # Usage
 
 The project is a foundry project. If required, foundry can be installed using the following cli command:
