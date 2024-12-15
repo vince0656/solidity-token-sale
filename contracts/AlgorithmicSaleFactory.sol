@@ -36,6 +36,8 @@ contract AlgorithmicSaleFactory {
     /// @notice Deploy a token sale contract using CREATE2 and configure it as per the user's arguments
     /// @param token The address of the token being sold
     /// @param currency The address of the token accepted as payment for the sale
+    /// @param startingPrice The initial price of 1 token being sold, denominated in the currency specified
+    /// @param totalNumberOfTokensToSell Maximum number of tokens that will be sold. Any unsold can be claimed back after the sale
     /// @param totalLengthOfSale Total duration of the sale
     /// @return sale The address of the deployed sale contract
     function createTokenSale(

@@ -15,10 +15,66 @@ Basing the implementation of the linear pricing model on the Aave model has the 
 
 # Deployment
 
-The algorithmic sale factory is deployed to the Arbitrum Sepolia test network at:
+The `AlgorithmicSaleFactory` is deployed to the Arbitrum Sepolia test network at:
 https://sepolia.arbiscan.io/address/0x8E9fB03b82f79f67ea5cE93e673FBD23d617ab83
 
-# Usage
+# Interacting with the deployed project
+## Creating a sale
+Creating a sale requires using the `AlgorithmicSaleFactory` at the above address and calling the following function:
+```solidity
+/// @notice Deploy a token sale contract using CREATE2 and configure it as per the user's arguments
+/// @param token The address of the token being sold
+/// @param currency The address of the token accepted as payment for the sale
+/// @param startingPrice The initial price of 1 token being sold, denominated in the currency specified
+/// @param totalNumberOfTokensToSell Maximum number of tokens that will be sold. Any unsold can be claimed back after the sale
+/// @param totalLengthOfSale Total duration of the sale
+/// @return sale The address of the deployed sale contract
+function createTokenSale(
+    address token,
+    address currency,
+    uint256 startingPrice,
+    uint256 totalNumberOfTokensToSell,
+    uint256 totalLengthOfSale
+) external returns (address sale);
+```
+
+The function will create a new token sale contract that will escrow the tokens to be sold from the user creating the sale. This means knowing the address of the sale contract ahead of time in order to approve the contract. Because `CREATE2` is used for deployment, the following function can be called on the factory to get the address of the sale contract before deployment:
+```solidity
+function getTokenSaleAddress(address token) external view returns (address);
+```
+
+### Example transaction
+https://sepolia.arbiscan.io/tx/0xf02abf3ab8cdf6676d16cc9585401dcf3f5d1e8bc65b6ed0ae674f1ae412be8f
+
+## Buying tokens
+As long as the sale is still active, the user can buy tokens by calling the target function on the sale contract:
+```solidity
+/// @dev Only permitted when the sale has not ended
+/// @param amount of whole tokens being purchased. Specifying whole amounts avoids loss of precision for calculating payment
+function buy(uint256 amount) external;
+```
+
+As specified in the natspec, whole number of tokens are specified without the decimal places i.e. specifying 50 tokens will be equivalent to buying 50 * 10 ^ DECIMALS number of tokens. 
+
+After buying tokens, the linear price model will adjust the price of the tokens making it more expensive for future participants of the sale.
+
+## Selling tokens
+Should a buyer change their mind and want to sell their tokens back to the sale contract (thereby reducing the price), then they can call the target function on the sale contract:
+```solidity
+/// @dev Only permitted when the sale has not ended
+/// @param amount of whole tokens being sold
+function sell(uint256 amount) external;
+```
+
+## Withdrawing assets after the end
+Once the sale concludes, the creator can get any unsold tokens and any money made by calling the following function on the sale contract:
+```solidity
+/// @notice After the sale is over allow the creator to withdraw assets
+/// @dev Can be called by anyone but funds will go to creator
+function withdraw() external;
+```
+
+# Local Usage
 
 The project is a foundry project. If required, foundry can be installed using the following cli command:
 ```
