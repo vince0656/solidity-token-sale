@@ -7,6 +7,7 @@ import {ERC20Token} from "@test/mocks/ERC20Token.sol";
 import {AlgorithmicSale} from "@contracts/AlgorithmicSale.sol";
 import {AlgorithmicSaleFactory} from "@contracts/AlgorithmicSaleFactory.sol";
 import {LinearPriceModel} from "@contracts/models/LinearPriceModel.sol";
+import {Errors} from "@contracts/errors/Errors.sol";
 import {SaleErrors} from "@contracts/errors/SaleErrors.sol";
 
 contract AlgorithmicSaleContractTests is Test {
@@ -47,12 +48,34 @@ contract AlgorithmicSaleContractTests is Test {
         assertEq(saleFactory.priceModel(), address(priceModel));
     }
 
-    function testCreateSale(uint256 startingPrice, uint128 length) public {
-        vm.assume(length >= 1 hours);
-        vm.assume(startingPrice >= 1 wei);
-        uint256 totalNumOfTokensToSell = 50_000 ether;
-        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
+    /// @dev Fuzzed test for creating a sale and checking the revert conditions
+    function testCreateSale(uint256 startingPrice, uint128 length, uint256 totalNumOfTokensToSell) public {
+        vm.assume(totalNumOfTokensToSell <= maxTokenSaleAmount);
+
+        if (length < 1 hours) {
+            deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, SaleErrors.SaleTooShort.selector);
+            return;
+        } 
+
+        if (startingPrice < 1 wei) {
+            deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, Errors.InvalidValue.selector);
+            return;
+        } 
         
+        if (totalNumOfTokensToSell < 1 wei) {
+            deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, Errors.InvalidValue.selector);
+            return;
+        } 
+
+        uint256 wholeNumberOfTokensBeingSold = totalNumOfTokensToSell / 1 ether;
+        uint256 parsedWholeNumberOfTokensBeingSold = wholeNumberOfTokensBeingSold * 1 ether;
+        if (totalNumOfTokensToSell != parsedWholeNumberOfTokensBeingSold) {
+            deploySaleExpectingRevert(userOne, startingPrice, totalNumOfTokensToSell, length, SaleErrors.InvalidTotalNumberOfTokensBeingSold.selector);
+            return;
+        }
+
+        // Deploy a non-reverting sale
+        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
         assertEq(token.balanceOf(address(sale)), totalNumOfTokensToSell);
         assertEq(sale.getCurrentPrice(), startingPrice);
         assertEq(sale.creator(), userOne);
@@ -175,6 +198,25 @@ contract AlgorithmicSaleContractTests is Test {
             totalLengthOfSale
         ));
 
+        vm.stopPrank();
+    }
+
+    function deploySaleExpectingRevert(
+        address creator,
+        uint256 startingPrice, 
+        uint256 totalNumberOfTokensToSell,
+        uint256 totalLengthOfSale,
+        bytes4 errorSelector
+    ) internal {
+        vm.startPrank(creator);
+        vm.expectRevert(errorSelector);
+        AlgorithmicSale(saleFactory.createTokenSale(
+            address(token), 
+            address(currency), 
+            startingPrice, 
+            totalNumberOfTokensToSell, 
+            totalLengthOfSale
+        ));
         vm.stopPrank();
     }
 }

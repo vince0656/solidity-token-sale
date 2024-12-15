@@ -89,10 +89,10 @@ contract AlgorithmicSale is Initializable {
         require(token_ != address(0), Errors.InvalidValue());
         require(currency_ != address(0), Errors.InvalidValue());
         require(priceModel_ != address(0), Errors.InvalidValue());
+        require(totalLengthOfSaleInSeconds_ >= 1 hours, SaleErrors.SaleTooShort());
         require(startingPrice_ >= 1 wei, Errors.InvalidValue());
         require(totalNumberOfTokensBeingSold_ >= 1 wei, Errors.InvalidValue());
         require(creator_ != address(0), Errors.InvalidValue());
-        require(totalLengthOfSaleInSeconds_ >= 1 hours, SaleErrors.SaleTooShort());
 
         // Effects
         creator = creator_;
