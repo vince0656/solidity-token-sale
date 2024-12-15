@@ -9,3 +9,6 @@ remappings = [
   '@test=tests',
   '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/'
 ]
+
+[fuzz]
+runs = 512

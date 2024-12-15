@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Errors} from "@contracts/errors/Errors.sol";
 import {LinearPriceModelErrors} from "@contracts/errors/LinearPriceModelErrors.sol";
 import {IPriceModel} from "@contracts/interfaces/IPriceModel.sol";
 
@@ -41,9 +40,9 @@ contract LinearPriceModel is IPriceModel {
     /// @inheritdoc IPriceModel
     function getCurrentPrice(uint256 totalTokensBeingSold, uint256 remainingTokensAvailableForPurchase, uint256 startingPrice) external override view returns (uint256 currentPrice) {
         // Perform validation
-        require(totalTokensBeingSold > 0, Errors.InvalidValue());
-        require(totalTokensBeingSold >= remainingTokensAvailableForPurchase, Errors.InvalidValue());
-        require(startingPrice > 0, Errors.InvalidValue());
+        require(totalTokensBeingSold > 0, LinearPriceModelErrors.InvalidNumOfTokensBeingSold());
+        require(totalTokensBeingSold >= remainingTokensAvailableForPurchase, LinearPriceModelErrors.InvalidRemainingNumOfTokens());
+        require(startingPrice > 0, LinearPriceModelErrors.InvalidStartingPrice());
 
         // When there are no tokens sold, we don't need to perform calculations and can simply return the starting price as the current
         if (totalTokensBeingSold == remainingTokensAvailableForPurchase) {

@@ -141,7 +141,7 @@ contract AlgorithmicSaleContractTests is Test {
 
         // Buy half of the tokens
         uint256 buyAmount = (totalNumOfTokensToSell / 2) / 1 ether;
-        uint256 cost = (startingPrice + 0.5 ether) * buyAmount;
+        uint256 cost = (startingPrice + 0.5 ether) * buyAmount; // 50% increase in price
         vm.startPrank(userTwo);
         currency.approve(address(sale), cost); // Based on model params we know half sold means 50% increase
         sale.buy(buyAmount);
