@@ -80,6 +80,72 @@ contract LinearPriceModelContractTests is Test {
         }
     }
 
+    function testPriceAtExactBreakpoint() public view {
+        uint256 totalTokensBeingSold = 1000 ether;
+        uint256 startingPrice = 1 ether;
+        
+        // Calculate tokens remaining at breakpoint (50%)
+        uint256 remainingAtBreakpoint = totalTokensBeingSold - (totalTokensBeingSold * model.breakpointInRAY() / 1e27);
+        
+        // Get price at exactly the breakpoint
+        uint256 priceAtBreakpoint = model.getCurrentPrice(
+            totalTokensBeingSold,
+            remainingAtBreakpoint,
+            startingPrice
+        );
+        
+        // At breakpoint (50% sold), the multiplier should be optimalPriceIncreaseInRAY (5e26)
+        // So price = startingPrice + (startingPrice * 5e26 / 1e27)
+        uint256 expectedPrice = startingPrice + ((startingPrice * model.optimalPriceIncreaseInRAY()) / 1e27);
+        assert(priceAtBreakpoint >= expectedPrice);
+        
+        // Test price just before and after breakpoint
+        uint256 priceJustBefore = model.getCurrentPrice(
+            totalTokensBeingSold,
+            remainingAtBreakpoint + 1,
+            startingPrice
+        );
+        
+        uint256 priceJustAfter = model.getCurrentPrice(
+            totalTokensBeingSold,
+            remainingAtBreakpoint - 1,
+            startingPrice
+        );
+        
+        assert(priceJustBefore <= priceAtBreakpoint);
+        assert(priceJustAfter >= priceAtBreakpoint);
+    }
+
+    function testPriceWithExtremeValues() public view {
+        uint256 totalTokensBeingSold = 1000 ether;  // Use a reasonable amount
+        uint256 startingPrice = 1 ether;  // Use 1 ether to avoid rounding issues
+        
+        // Test with very small remaining amount (almost all sold)
+        uint256 priceNearEnd = model.getCurrentPrice(
+            totalTokensBeingSold,
+            1 wei,  // Only 1 wei remaining
+            startingPrice
+        );
+        
+        // At max (almost all sold), the multiplier should be close to maxPriceIncreaseInRAY (2e27)
+        // So price = startingPrice * (1 + 2) = startingPrice * 3
+        uint256 expectedMaxPrice = startingPrice * 3;  // 3 ether
+        assert(priceNearEnd >= expectedMaxPrice - 1);  // Allow 1 wei rounding error
+        
+        // Test with amount just sold (almost none sold)
+        uint256 priceAtStart = model.getCurrentPrice(
+            totalTokensBeingSold,
+            totalTokensBeingSold - 1 wei,  // Only 1 wei sold
+            startingPrice
+        );
+        
+        // With just 1 wei sold, the multiplier should be very close to basePriceIncreaseInRay (1e25)
+        // So price = startingPrice * (1 + 0.01) = startingPrice * 1.01
+        uint256 expectedStartPrice = startingPrice + (startingPrice / 100);  // 1.01 ether
+        assert(priceAtStart >= expectedStartPrice - 1);  // Allow 1 wei rounding error
+        assert(priceAtStart <= startingPrice + (startingPrice / 50));  // Allow some margin for rounding
+    }
+
     function assertCurrentPriceReflectsAllTokensAreSoldOut(
         uint256 numOfTokensForSale,
         uint256 numOfTokensAvailableForPurchase,

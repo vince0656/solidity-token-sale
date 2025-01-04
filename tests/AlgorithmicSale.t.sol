@@ -21,12 +21,13 @@ contract AlgorithmicSaleContractTests is Test {
     AlgorithmicSale sale;
     address userOne = vm.addr(1);
     address userTwo = vm.addr(2);
+    address userThree = vm.addr(3);
     uint256 maxTokenSaleAmount = 5_000_000 ether;
 
     function setUp() public {
         // Deploy the token sale factory
-        token = new ERC20Token();
-        currency = new ERC20Token();
+        token = new ERC20Token("Test Token", "TEST", 18);
+        currency = new ERC20Token("Test Currency", "TCUR", 18);
         saleImplementation = address(new AlgorithmicSale());
         priceModel = new LinearPriceModel(
             1e25, // 1% base increase
@@ -39,9 +40,11 @@ contract AlgorithmicSaleContractTests is Test {
         // Airdrop tokens
         token.mint(userOne, maxTokenSaleAmount);
         token.mint(userTwo, maxTokenSaleAmount);
+        token.mint(userThree, maxTokenSaleAmount);
 
         currency.mint(userOne, maxTokenSaleAmount);
         currency.mint(userTwo, maxTokenSaleAmount);
+        currency.mint(userThree, maxTokenSaleAmount);
     }
 
     function testDeployment() public view {
@@ -180,6 +183,120 @@ contract AlgorithmicSaleContractTests is Test {
         // Check balances that the withdraw succeeded
         assertEq(token.balanceOf(userOne) - totalNumOfTokensBeforeWithdraw, totalNumOfTokensToSell / 2);
         assertEq(currency.balanceOf(userOne) - totalNumOfCurrencyTokensBeforeWithdraw, cost);
+    }
+
+    function testBuyWhenAlmostSoldOut() public {
+        // Use fixed values instead of fuzzing to avoid issues with random inputs
+        uint256 length = 1 days;
+        uint256 startingPrice = 1 ether;
+        uint256 totalNumOfTokensToSell = 10 ether;  // 10 tokens in wei
+        
+        // Deploy sale with userOne's tokens
+        vm.startPrank(userOne);
+        address predictedSale = saleFactory.getTokenSaleAddress(address(token));
+        token.approve(predictedSale, totalNumOfTokensToSell);
+        address saleAddr = saleFactory.createTokenSale(
+            address(token),
+            address(currency),
+            startingPrice,
+            totalNumOfTokensToSell,
+            length
+        );
+        sale = AlgorithmicSale(saleAddr);
+        vm.stopPrank();
+
+        // Buy almost all tokens except 1
+        uint256 almostAll = 9;  // 9 whole tokens
+        uint256 numberOfTokensBeingPurchased = sale.parseWholeTokenAmount(almostAll);
+        uint256 cost = sale.previewAssetPriceForPurchase(numberOfTokensBeingPurchased);
+
+        vm.startPrank(userTwo);
+        currency.mint(userTwo, cost);
+        currency.approve(address(sale), cost * almostAll);
+        sale.buy(almostAll);
+        vm.stopPrank();
+
+        // Try to buy more than remaining
+        vm.startPrank(userThree);
+        vm.expectRevert(bytes4(keccak256("ExceedsMaxAmount()")));
+        sale.previewAssetPriceForPurchase(2 ether);
+        currency.mint(userThree, cost);
+        currency.approve(address(sale), cost * 2);
+        vm.expectRevert(bytes4(keccak256("ExceedsMaxAmount()")));
+        sale.buy(2);
+        vm.stopPrank();
+
+        // Buy the last remaining token
+        vm.startPrank(userThree);
+        uint256 finalCost = sale.previewAssetPriceForPurchase(1 ether);
+        currency.mint(userThree, finalCost);
+        currency.approve(address(sale), finalCost);
+        sale.buy(1);
+        vm.stopPrank();
+
+        // Verify sale is now sold out
+        assertEq(sale.numberOfTokensSold(), totalNumOfTokensToSell);
+    }
+
+    function testSaleActiveModifierAtExactEndTime(uint128 length) public {
+        vm.assume(length >= 1 hours);
+        uint256 startingPrice = 1 ether;
+        uint256 totalNumOfTokensToSell = 100 ether;
+        deploySale(userOne, startingPrice, totalNumOfTokensToSell, length);
+
+        // Move time to exactly the end of sale
+        vm.warp(block.timestamp + length);
+
+        // Try to buy - should revert
+        vm.startPrank(userTwo);
+        currency.approve(address(sale), startingPrice);
+        vm.expectRevert(SaleErrors.SaleFinished.selector);
+        sale.buy(1);
+        vm.stopPrank();
+
+        // Try to sell - should also revert
+        vm.startPrank(userTwo);
+        token.approve(address(sale), 1 ether);
+        vm.expectRevert(SaleErrors.SaleFinished.selector);
+        sale.sell(1);
+        vm.stopPrank();
+    }
+
+    function testParseWholeTokenAmountWithDifferentDecimals() public {
+        // Deploy a token with 6 decimals
+        ERC20Token token6Dec = new ERC20Token("Token6Dec", "T6D", 6);
+        
+        // Deploy sale with 6 decimal token
+        uint256 startingPrice = 1 ether;
+        uint256 totalNumOfTokensToSell = 5 * 10**6;  // 5 tokens in wei (6 decimals)
+        
+        // Get predicted address and approve
+        address predictedSale = saleFactory.getTokenSaleAddress(address(token6Dec));
+        vm.startPrank(userOne);
+        token6Dec.mint(userOne, totalNumOfTokensToSell);
+        token6Dec.approve(predictedSale, totalNumOfTokensToSell);
+        
+        // Deploy sale
+        address saleAddr = saleFactory.createTokenSale(
+            address(token6Dec),
+            address(currency),
+            startingPrice,
+            totalNumOfTokensToSell,
+            1 hours
+        );
+        sale = AlgorithmicSale(saleAddr);
+        vm.stopPrank();
+        
+        // Buy 1 whole token
+        vm.startPrank(userTwo);
+        uint256 cost = sale.previewAssetPriceForPurchase(1 * 10**6);  // 1 whole token
+        currency.mint(userTwo, cost);
+        currency.approve(address(sale), cost);
+        sale.buy(1);
+        vm.stopPrank();
+        
+        // Check balance is correct
+        assertEq(token6Dec.balanceOf(userTwo), 10**6);  // 1 token in 6 decimals
     }
 
     function deploySale(
