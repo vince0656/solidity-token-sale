@@ -1,0 +1,7 @@
+[foundry]
+# The directory where your test files are located
+test_directory = "tests"
+# The directory where your tree files are located
+tree_directory = "tests/btt"
+# The test file extension
+test_file_extension = ".t.sol"

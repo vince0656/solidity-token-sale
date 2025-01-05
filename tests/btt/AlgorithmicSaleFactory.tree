@@ -1,0 +1,38 @@
+├── when deploying the factory
+│   ├── when parameters are valid
+│   │   ├── it sets the implementation address
+│   │   ├── it sets the price model address
+│   │   └── it initializes with correct owner
+│   └── when parameters are invalid
+│       ├── it reverts with zero implementation address
+│       └── it reverts with zero price model address
+├── when creating a token sale
+│   ├── when parameters are valid
+│   │   ├── it deploys a new sale contract
+│   │   ├── it initializes sale with correct parameters
+│   │   │   ├── it sets token address
+│   │   │   ├── it sets currency address
+│   │   │   ├── it sets starting price
+│   │   │   ├── it sets total tokens to sell
+│   │   │   └── it sets sale duration
+│   │   ├── it uses CREATE2 for deterministic address
+│   │   └── it emits TokenSaleCreated event
+│   └── when parameters are invalid
+│       ├── it reverts with zero token address
+│       ├── it reverts with zero currency address
+│       ├── it reverts with zero starting price
+│       ├── it reverts with zero tokens to sell
+│       └── it reverts with zero sale duration
+├── when predicting sale address
+│   ├── when token address is valid
+│   │   ├── it returns correct deterministic address
+│   │   └── it matches actual deployed address
+│   └── when token address is zero
+│       └── it reverts with invalid address
+└── when accessing factory state
+    ├── when checking implementation
+    │   └── it returns correct implementation address
+    ├── when checking price model
+    │   └── it returns correct price model address
+    └── when checking ownership
+        └── it returns correct owner address

@@ -1,0 +1,33 @@
+├── when the price model is deployed
+│   ├── when the parameters are valid
+│   │   ├── it sets the base price increase to 1e25
+│   │   ├── it sets the optimal price increase to 5e26
+│   │   ├── it sets the max price increase to 2e27
+│   │   └── it sets the breakpoint to 5e26
+│   └── when the parameters are invalid
+│       ├── it reverts if optimal increase < base increase
+│       ├── it reverts if max increase < optimal increase
+│       └── it reverts if any parameter is zero
+├── when getting current price
+│   ├── when no tokens are sold
+│   │   ├── it returns starting price
+│   │   └── it reverts if starting price is zero
+│   ├── when some tokens are sold (< breakpoint)
+│   │   ├── it increases price linearly with base rate
+│   │   ├── it never exceeds optimal price increase
+│   │   └── it maintains price precision
+│   ├── when tokens sold reach breakpoint
+│   │   ├── it applies optimal price increase
+│   │   ├── it switches to steeper gradient
+│   │   └── it maintains price continuity
+│   ├── when tokens sold exceed breakpoint
+│   │   ├── it increases price with steeper gradient
+│   │   ├── it never exceeds max price increase
+│   │   └── it maintains price precision
+│   └── when all tokens are sold
+│       ├── it applies max price increase
+│       └── it returns 3x starting price
+└── when input validation fails
+    ├── it reverts if total tokens is zero
+    ├── it reverts if remaining tokens > total
+    └── it reverts if starting price is zero

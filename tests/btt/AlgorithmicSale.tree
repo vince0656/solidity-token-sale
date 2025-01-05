@@ -1,0 +1,53 @@
+├── when deploying the sale contract
+│   ├── when parameters are valid
+│   │   ├── it initializes with correct token address
+│   │   ├── it initializes with correct currency address
+│   │   ├── it sets the starting price
+│   │   ├── it sets the total tokens to sell
+│   │   ├── it sets the sale duration
+│   │   └── it sets the creator address
+│   └── when parameters are invalid
+│       ├── it reverts with zero token address
+│       ├── it reverts with zero currency address
+│       ├── it reverts with zero starting price
+│       ├── it reverts with zero tokens to sell
+│       └── it reverts with zero sale duration
+├── when buying tokens
+│   ├── when sale is active
+│   │   ├── when buyer has sufficient currency
+│   │   │   ├── it transfers correct amount of tokens
+│   │   │   ├── it charges correct price
+│   │   │   ├── it updates tokens sold
+│   │   │   └── it increases price for next buyer
+│   │   ├── when buyer has insufficient currency
+│   │   │   └── it reverts with insufficient allowance
+│   │   └── when amount exceeds available tokens
+│   │       └── it reverts with exceeds max amount
+│   └── when sale is not active
+│       ├── it reverts if sale hasn't started
+│       └── it reverts if sale has ended
+├── when selling tokens back
+│   ├── when sale is active
+│   │   ├── when seller has sufficient tokens
+│   │   │   ├── it refunds correct currency amount
+│   │   │   ├── it accepts returned tokens
+│   │   │   ├── it updates tokens sold
+│   │   │   └── it decreases price for next buyer
+│   │   └── when seller has insufficient tokens
+│   │       └── it reverts with insufficient balance
+│   └── when sale is not active
+│       └── it reverts with sale finished
+├── when parsing whole token amounts
+│   ├── when token decimals is 18
+│   │   └── it correctly converts to wei
+│   ├── when token decimals is 6
+│   │   └── it correctly converts to smallest unit
+│   └── when amount is zero
+│       └── it reverts with invalid value
+└── when withdrawing after sale
+    ├── when sale has ended
+    │   ├── it transfers unsold tokens to creator
+    │   ├── it transfers all currency to creator
+    │   └── it can only be called once
+    └── when sale is still active
+        └── it reverts with sale not finished
